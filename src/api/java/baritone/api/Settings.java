@@ -45,6 +45,16 @@ import java.util.function.Consumer;
 public final class Settings {
 
     /**
+     * By Alluseri
+     */
+    public final Setting<Integer> retryLimitOnFailure = new Setting<>(250);
+
+    /**
+     * By Alluseri
+     */
+    public final Setting<Integer> logEveryNthRetry = new Setting<>(10);
+
+    /**
      * Allow Baritone to break blocks
      */
     public final Setting<Boolean> allowBreak = new Setting<>(true);
@@ -68,16 +78,6 @@ public final class Settings {
      * Allow Baritone to move items in your inventory to your hotbar
      */
     public final Setting<Boolean> allowInventory = new Setting<>(false);
-
-    /**
-     * Wait this many ticks between InventoryBehavior moving inventory items
-     */
-    public final Setting<Integer> ticksBetweenInventoryMoves = new Setting<>(1);
-
-    /**
-     * Come to a halt before doing any inventory moves. Intended for anticheat such as 2b2t
-     */
-    public final Setting<Boolean> inventoryMoveOnlyIfStationary = new Setting<>(false);
 
     /**
      * Disable baritone's auto-tool at runtime, but still assume that another mod will provide auto tool functionality
@@ -748,7 +748,7 @@ public final class Settings {
     public final Setting<Boolean> blacklistClosestOnFailure = new Setting<>(true);
 
     /**
-     * 😎 Render cached chunks as semitransparent. Doesn't work with OptiFine 😭 Rarely randomly crashes, see <a href="https://github.com/cabaletta/baritone/issues/327">this issue</a>.
+     * рџ�Ћ Render cached chunks as semitransparent. Doesn't work with OptiFine рџ�­ Rarely randomly crashes, see <a href="https://github.com/cabaletta/baritone/issues/327">this issue</a>.
      * <p>
      * Can be very useful on servers with low render distance. After enabling, you may need to reload the world in order for it to have an effect
      * (e.g. disconnect and reconnect, enter then exit the nether, die and respawn, etc). This may literally kill your FPS and CPU because

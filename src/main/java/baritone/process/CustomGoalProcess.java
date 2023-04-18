@@ -18,6 +18,7 @@
 package baritone.process;
 
 import baritone.Baritone;
+import baritone.api.Settings;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.process.ICustomGoalProcess;
 import baritone.api.process.PathingCommand;
@@ -72,6 +73,8 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
     public boolean isActive() {
         return this.state != State.NONE;
     }
+    
+    private int retryAttempts = 1;
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
@@ -82,11 +85,21 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
                 // return FORCE_REVALIDATE_GOAL_AND_PATH just once
                 PathingCommand ret = new PathingCommand(this.goal, PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH);
                 this.state = State.EXECUTING;
+                this.retryAttempts = 1;
                 return ret;
             case EXECUTING:
                 if (calcFailed) {
-                    onLostControl();
-                    return new PathingCommand(this.goal, PathingCommandType.CANCEL_AND_SET_GOAL);
+                	if (retryAttempts % Baritone.settings().logEveryNthRetry.value == 1) logDirect(String.format("Calculation failed! Retrying(attempt %d/%d)...", retryAttempts, Baritone.settings().retryLimitOnFailure.value));
+                	if (retryAttempts++ > Baritone.settings().retryLimitOnFailure.value) {
+                		logDirect(String.format("Couldn't restore path in %d attempts, resetting the path now.", retryAttempts));
+                		logDirect(String.format("Please check out the 'retryLimitOnFailure' setting."));
+                        onLostControl();
+                        return new PathingCommand(this.goal, PathingCommandType.CANCEL_AND_SET_GOAL);
+                	} else {
+                        PathingCommand tret = new PathingCommand(this.goal, PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH);
+                        this.state = State.EXECUTING;
+                        return tret;
+                	}
                 }
                 if (this.goal == null || (this.goal.isInGoal(ctx.playerFeet()) && this.goal.isInGoal(baritone.getPathingBehavior().pathStart()))) {
                     onLostControl(); // we're there xd
@@ -98,6 +111,7 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
                     }
                     return new PathingCommand(this.goal, PathingCommandType.CANCEL_AND_SET_GOAL);
                 }
+                this.retryAttempts = 1;
                 return new PathingCommand(this.goal, PathingCommandType.SET_GOAL_AND_PATH);
             default:
                 throw new IllegalStateException();
@@ -108,6 +122,7 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
     public void onLostControl() {
         this.state = State.NONE;
         this.goal = null;
+        this.retryAttempts = 1;
     }
 
     @Override
